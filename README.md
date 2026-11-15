@@ -120,7 +120,7 @@ It focuses on medication management, timely reminders, health tracking, and cont
 <a href="https://github.com/arpita7819/CareCircle-AI-Hack-/blob/main/Screenshots/Dashboard.png">Dashboard</a>
 
 ### 3. Medication Management
-![Medication Management](screenshots/medication.png)
+<a href="https://github.com/arpita7819/CareCircle-AI-Hack-/blob/main/Screenshots/Medications.png">Medication Management</a>
 
 ### 4. Appointment Management
 ![Appointment Management](screenshots/appointments.png)
