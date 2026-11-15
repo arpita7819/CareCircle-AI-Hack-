@@ -129,7 +129,7 @@ It focuses on medication management, timely reminders, health tracking, and cont
 <a href="https://github.com/arpita7819/CareCircle-AI-Hack-/blob/main/Screenshots/Insights.png">Insights</a>
 
 ### 6. Family Access & Permissions
-![Family Access](screenshots/family-access.png)
+<a href="https://github.com/arpita7819/CareCircle-AI-Hack-/blob/main/Screenshots/Request%20access.png">Request Access</a>
 
 ---
 
