@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CareCircle</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--ink:#1d2a2a;--mute:#5f6f6f;--brand:#0f766e;--brand-d:#0b5a54;
+--warn:#b45309;--bad:#b91c1c;--ok:#15803d;--line:#e3dfd6;--r:18px}
+@media(prefers-color-scheme:dark){:root{--bg:#121816;--card:#1b2420;--ink:#eef3f1;--mute:#9bb0aa;--line:#2b3832;--brand:#2dd4bf;--brand-d:#5eead4}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:20px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body.compact{font-size:16px}
+header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:var(--brand);color:#fff;position:sticky;top:0;z-index:5}
+header h1{font-size:1.2em;margin:0}
+header button{background:rgba(255,255,255,.18);color:#fff;border:0;border-radius:12px;padding:8px 14px;font-size:.8em;margin-left:6px}
+main{max-width:760px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin:0 0 14px}
+h2{font-size:1.15em;margin:.2em 0 .6em}
+h3{font-size:1em;margin:0}
+.muted{color:var(--mute);font-size:.85em}
+label{display:block;margin:.6em 0 .2em;font-weight:600;font-size:.9em}
+input,select,textarea{width:100%;padding:12px;font-size:1em;border:2px solid var(--line);border-radius:12px;background:var(--bg);color:var(--ink)}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:3px solid var(--brand);outline-offset:1px}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--brand);color:#fff;border:0;border-radius:14px;padding:14px 20px;font-weight:700;font-size:1em}
+.btn.sec{background:transparent;color:var(--brand);border:2px solid var(--brand)}
+.btn.danger{background:var(--bad)}
+.btn.big{width:100%;padding:18px;font-size:1.1em}
+.btn.sm{padding:8px 12px;font-size:.8em;border-radius:10px}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.row>*{flex:1}
+.row>.fit{flex:0 0 auto}
+nav{display:flex;gap:6px;overflow-x:auto;padding:0 0 12px}
+nav button{flex:1 0 auto;background:var(--card);border:2px solid var(--line);color:var(--ink);padding:10px 14px;border-radius:14px;font-weight:600;font-size:.85em;white-space:nowrap}
+nav button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.dose{display:flex;align-items:center;gap:12px;border-left:8px solid var(--line)}
+.dose.taken{border-left-color:var(--ok);opacity:.75}
+.dose.overdue{border-left-color:var(--bad)}
+.dose.pending{border-left-color:var(--warn)}
+.dose .t{font-size:1.5em;font-weight:800;min-width:78px}
+.dose .info{flex:1}
+.pill{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.75em;font-weight:700;background:var(--line);color:var(--ink)}
+.pill.ok{background:#dcfce7;color:#14532d}.pill.bad{background:#fee2e2;color:#7f1d1d}.pill.warn{background:#fef3c7;color:#78350f}
+.score{font-size:3em;font-weight:800;color:var(--brand)}
+.banner{padding:12px 14px;border-radius:12px;background:#fef3c7;color:#78350f;margin:0 0 12px;font-size:.9em}
+.banner.bad{background:#fee2e2;color:#7f1d1d}
+.hidden{display:none!important}
+.mood{display:flex;gap:6px}.mood button{flex:1;font-size:1.8em;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:6px}
+.mood button.on{border-color:var(--brand);background:var(--card)}
+pre{white-space:pre-wrap;background:var(--bg);padding:12px;border-radius:12px;font-size:.8em}
+.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#111;color:#fff;padding:12px 18px;border-radius:12px;font-size:.85em;z-index:9;max-width:90%}
+@media print{header,nav,.noprint{display:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>💊 CareCircle</h1>
+  <div>
+    <button id="lang" title="Language">EN/हि</button>
+    <button id="size" title="Text size">A±</button>
+    <button id="logout" class="hidden">Log out</button>
+  </div>
+</header>
+<main id="app"></main>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+const T = {
+ en:{today:"Today",meds:"Medicines",appts:"Appointments",insights:"Insights",family:"Family & access",activity:"Activity",
+  taken:"✔ Taken",undo:"Undo",skip:"Skip",none:"Nothing scheduled today.",overdue:"Overdue",hello:"Hello",
+  checkin:"How are you feeling?",save:"Save",add:"Add",voice:"🎤 Speak"},
+ hi:{today:"आज",meds:"दवाइयाँ",appts:"अपॉइंटमेंट",insights:"जानकारी",family:"परिवार और अनुमति",activity:"गतिविधि",
+  taken:"✔ ले ली",undo:"वापस",skip:"छोड़ें",none:"आज कुछ निर्धारित नहीं है।",overdue:"देर हो गई",hello:"नमस्ते",
+  checkin:"आप कैसा महसूस कर रहे हैं?",save:"सहेजें",add:"जोड़ें",voice:"🎤 बोलें"}
+};
+let lang = localStorage.lang || "en";
+const t = k => (T[lang] && T[lang][k]) || T.en[k] || k;
+let token = localStorage.token || null, me = null, tab = "today";
+const $ = (s, r=document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function toast(m){const e=$("#toast");e.textContent=m;e.classList.remove("hidden");clearTimeout(toast.h);toast.h=setTimeout(()=>e.classList.add("hidden"),3500)}
+function speak(text){ if("speechSynthesis" in window){const u=new SpeechSynthesisUtterance(text);u.lang=lang==="hi"?"hi-IN":"en-IN";speechSynthesis.speak(u)} }
+
+async function api(path, opts={}){
+  const r = await fetch("/api"+path,{method:opts.method||"GET",
+    headers:{"Content-Type":"application/json",...(token?{Authorization:"Bearer "+token}:{})},
+    body:opts.body?JSON.stringify(opts.body):undefined});
+  const data = await r.json().catch(()=>({}));
+  if(!r.ok){ if(r.status===401&&token){logout();} throw new Error(typeof data.detail==="string"?data.detail:JSON.stringify(data.detail||"Error")); }
+  return data;
+}
+function logout(){token=null;me=null;localStorage.removeItem("token");render()}
+$("#logout").onclick=logout;
+$("#lang").onclick=()=>{lang=lang==="en"?"hi":"en";localStorage.lang=lang;render()};
+$("#size").onclick=()=>document.body.classList.toggle("compact");
+
+function mic(inputEl){
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SR){toast("Voice input is not supported in this browser");return}
+  const r=new SR(); r.lang=lang==="hi"?"hi-IN":"en-IN";
+  r.onresult=e=>{inputEl.value=e.results[0][0].transcript};
+  r.onerror=()=>toast("Could not hear that, try again");
+  r.start();
+}
+
+// ----------------------------------------------------------------- auth view
+function authView(){
+  $("#logout").classList.add("hidden");
+  $("#app").innerHTML = `
+  <div class="card"><h2>Log in</h2>
+    <label>Profile number</label><input id="l_pid" inputmode="numeric">
+    <label>Your name</label><input id="l_name" autocomplete="username">
+    <label>Passcode</label><input id="l_pass" type="password" autocomplete="current-password">
+    <p></p><button class="btn big" id="l_go">Log in</button></div>
+  <div class="card"><h2>New elder profile</h2>
+    <label>Elder's name</label><input id="c_name">
+    <label>Email for reminders</label><input id="c_email" type="email">
+    <label>Choose a passcode (4+ characters)</label><input id="c_pass" type="password">
+    <p></p><button class="btn big sec" id="c_go">Create profile</button></div>
+  <div class="card"><h2>Join as caretaker / family</h2>
+    <label>Profile number</label><input id="j_pid" inputmode="numeric">
+    <label>Your name</label><input id="j_name">
+    <label>Your email</label><input id="j_email" type="email">
+    <label>Role</label><select id="j_role"><option value="caretaker">Caretaker (can edit)</option><option value="family">Family (view only)</option></select>
+    <label>Your own passcode</label><input id="j_pass" type="password">
+    <label>Elder's passcode (optional, skips approval)</label><input id="j_epass" type="password">
+    <p></p><button class="btn big sec" id="j_go">Request access</button></div>`;
+  $("#l_go").onclick=async()=>{try{
+    const r=await api("/login",{method:"POST",body:{profile_id:+$("#l_pid").value,name:$("#l_name").value,passcode:$("#l_pass").value}});
+    token=r.token;localStorage.token=token;await boot()}catch(e){toast(e.message)}};
+  $("#c_go").onclick=async()=>{try{
+    const r=await api("/profiles",{method:"POST",body:{elder_name:$("#c_name").value,elder_email:$("#c_email").value||null,passcode:$("#c_pass").value,language:lang}});
+    token=r.token;localStorage.token=token;toast("Profile number: "+r.profile_id+" - share it with family");await boot()}catch(e){toast(e.message)}};
+  $("#j_go").onclick=async()=>{try{
+    const r=await api("/join",{method:"POST",body:{profile_id:+$("#j_pid").value,name:$("#j_name").value,email:$("#j_email").value||null,role:$("#j_role").value,passcode:$("#j_pass").value,elder_passcode:$("#j_epass").value||null}});
+    toast(r.message)}catch(e){toast(e.message)}};
+}
+
+// ------------------------------------------------------------------- shell
+const TABS = ["today","meds","appts","insights","family","activity"];
+async function boot(){
+  try{ me = await api("/me"); }catch(e){ return authView(); }
+  render();
+}
+function render(){
+  if(!token||!me) return authView();
+  $("#logout").classList.remove("hidden");
+  $("#app").innerHTML = `<div class="muted noprint">${esc(me.name)} · ${esc(me.role)} · profile #${me.profile_id}</div>
+   <nav class="noprint">${TABS.map(k=>`<button data-t="${k}" class="${tab===k?"on":""}">${t(k==="appts"?"appts":k)}</button>`).join("")}</nav>
+   <div id="view"></div>`;
+  document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{tab=b.dataset.t;render()});
+  ({today:todayView,meds:medsView,appts:apptsView,insights:insightsView,family:familyView,activity:activityView})[tab]();
+}
+const canEdit = () => me.can_edit;
+
+// ------------------------------------------------------------------- today
+async function todayView(){
+  const v=$("#view"); v.innerHTML="Loading…";
+  const [doses,appts,ins]=await Promise.all([api("/doses/today"),api("/appointments"),api("/insights")]);
+  const overdue=doses.filter(d=>d.overdue).length;
+  let h=`<h2>${t("hello")}, ${esc(me.elder_name)}</h2>`;
+  if(overdue) h+=`<div class="banner bad">⚠ ${overdue} ${t("overdue").toLowerCase()}</div>`;
+  ins.refills.forEach(r=>h+=`<div class="banner">🧴 ${esc(r.name)} runs out in about ${r.days_left} day(s)</div>`);
+  if(!doses.length) h+=`<div class="card muted">${t("none")}</div>`;
+  doses.forEach(d=>{
+    const cls=d.status==="taken"?"taken":d.overdue?"overdue":"pending";
+    h+=`<div class="card dose ${cls}"><div class="t">${d.scheduled_at.slice(11)}</div>
+      <div class="info"><h3>${esc(d.name)} ${esc(d.dosage||"")}</h3>
+      <div class="muted">${esc(d.instructions||"")}</div>
+      ${d.status==="taken"?`<span class="pill ok">Taken ${d.taken_at?d.taken_at.slice(11):""}</span>`:d.overdue?`<span class="pill bad">${t("overdue")}</span>`:""}</div>
+      ${canEdit()?(d.status==="taken"
+        ?`<button class="btn sec sm" data-d="${d.id}" data-s="pending">${t("undo")}</button>`
+        :`<button class="btn" data-d="${d.id}" data-s="taken">${t("taken")}</button>`):""}</div>`;
+  });
+  const next=appts[0];
+  if(next) h+=`<div class="card"><h3>📅 ${esc(next.doctor)}</h3><div class="muted">${next.at.replace("T"," ")} ${esc(next.location||"")}</div></div>`;
+  if(canEdit()) h+=`<div class="card"><h3>${t("checkin")}</h3>
+    <div class="mood" id="mood">${["😣","😕","😐","🙂","😄"].map((e,i)=>`<button data-m="${i+1}">${e}</button>`).join("")}</div>
+    <label>Anything bothering you?</label><div class="row"><input id="sym"><button class="btn sec fit" id="symmic">${t("voice")}</button></div>
+    <p></p><button class="btn" id="ck">${t("save")}</button></div>`;
+  h+=`<button class="btn sec sm noprint" id="readout">🔊 Read today aloud</button>`;
+  v.innerHTML=h;
+  v.querySelectorAll("button[data-d]").forEach(b=>b.onclick=async()=>{
+    try{await api("/doses/"+b.dataset.d,{method:"POST",body:{status:b.dataset.s}});todayView()}catch(e){toast(e.message)}});
+  let mood=null;
+  v.querySelectorAll("#mood button").forEach(b=>b.onclick=()=>{mood=+b.dataset.m;v.querySelectorAll("#mood button").forEach(x=>x.classList.toggle("on",x===b))});
+  if($("#symmic")) $("#symmic").onclick=()=>mic($("#sym"));
+  if($("#ck")) $("#ck").onclick=async()=>{ if(!mood) return toast("Pick a mood first");
+    try{const r=await api("/checkins",{method:"POST",body:{mood,symptoms:$("#sym").value||null}});
+      toast(r.alerted_caretakers?"Saved. Your caretakers have been told.":"Saved. Thank you!");$("#sym").value=""}catch(e){toast(e.message)}};
+  $("#readout").onclick=()=>speak(doses.length?doses.map(d=>`${d.scheduled_at.slice(11)} ${d.name} ${d.status==="taken"?"done":"pending"}`).join(". "):t("none"));
+}
+
+// ---------------------------------------------------------------- medicines
+async function medsView(){
+  const v=$("#view"); const meds=await api("/medications");
+  let h="";
+  if(canEdit()) h+=`<div class="card"><h2>Add a medicine</h2>
+    <label>Name</label><div class="row"><input id="m_name"><button class="btn sec fit" id="m_mic">${t("voice")}</button></div>
+    <div class="row"><div><label>Dosage</label><input id="m_dose" placeholder="500 mg"></div>
+    <div><label>Times (HH:MM, comma separated)</label><input id="m_times" placeholder="08:00, 20:00"></div></div>
+    <label>Instructions</label><input id="m_ins" placeholder="After food">
+    <div class="row"><div><label>Pills in stock</label><input id="m_stock" inputmode="numeric"></div>
+    <div><label>Pills per dose</label><input id="m_ppd" inputmode="numeric" value="1"></div></div>
+    <p></p><button class="btn big" id="m_add">${t("add")}</button></div>`;
+  meds.forEach(m=>h+=`<div class="card"><div class="row"><div><h3>${esc(m.name)} ${esc(m.dosage||"")}</h3>
+    <div class="muted">${m.times.join(" · ")} ${m.instructions?"· "+esc(m.instructions):""}</div>
+    ${m.pills_remaining!=null?`<span class="pill ${m.days_left<=5?"warn":""}">${m.pills_remaining} pills · ~${m.days_left} days</span>`:""}</div>
+    ${canEdit()?`<button class="btn danger sm fit" data-del="${m.id}">Remove</button>`:""}</div></div>`);
+  if(!meds.length) h+=`<div class="card muted">No medicines yet.</div>`;
+  v.innerHTML=h;
+  if($("#m_mic")) $("#m_mic").onclick=()=>mic($("#m_name"));
+  if($("#m_add")) $("#m_add").onclick=async()=>{try{
+    const r=await api("/medications",{method:"POST",body:{name:$("#m_name").value,dosage:$("#m_dose").value||null,
+      instructions:$("#m_ins").value||null,times:$("#m_times").value.split(",").map(s=>s.trim()).filter(Boolean),
+      pills_remaining:$("#m_stock").value?+$("#m_stock").value:null,pills_per_dose:+$("#m_ppd").value||1}});
+    if(r.warnings.length) alert("⚠ Please check with a doctor or pharmacist:\n\n"+r.warnings.join("\n"));
+    medsView()}catch(e){toast(e.message)}};
+  v.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(confirm("Remove this medicine?")){await api("/medications/"+b.dataset.del,{method:"DELETE"});medsView()}});
+}
+
+// ------------------------------------------------------------- appointments
+async function apptsView(){
+  const v=$("#view"); const a=await api("/appointments"); let h="";
+  if(canEdit()) h+=`<div class="card"><h2>Add appointment</h2>
+    <label>Doctor</label><input id="a_doc"><label>When</label><input id="a_at" type="datetime-local">
+    <label>Where</label><input id="a_loc"><label>Notes</label><input id="a_notes">
+    <p></p><button class="btn big" id="a_add">${t("add")}</button></div>`;
+  a.forEach(x=>h+=`<div class="card row"><div><h3>${esc(x.doctor)}</h3><div class="muted">${x.at.replace("T"," ")} ${esc(x.location||"")}<br>${esc(x.notes||"")}</div></div>
+    ${canEdit()?`<button class="btn danger sm fit" data-del="${x.id}">Remove</button>`:""}</div>`);
+  if(!a.length) h+=`<div class="card muted">No upcoming appointments.</div>`;
+  v.innerHTML=h;
+  if($("#a_add")) $("#a_add").onclick=async()=>{try{
+    await api("/appointments",{method:"POST",body:{doctor:$("#a_doc").value,at:$("#a_at").value,location:$("#a_loc").value||null,notes:$("#a_notes").value||null}});apptsView()}catch(e){toast(e.message)}};
+  v.querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{await api("/appointments/"+b.dataset.del,{method:"DELETE"});apptsView()});
+}
+
+// ----------------------------------------------------------------- insights
+async function insightsView(){
+  const v=$("#view"); const [i,ck]=await Promise.all([api("/insights"),api("/checkins")]);
+  let h=`<div class="card"><h2>7-day adherence</h2><div class="score">${i.score==null?"–":i.score+"%"}</div>
+    <div class="muted">${i.taken} of ${i.total} doses taken</div></div>`;
+  if(i.patterns.length) h+=`<div class="card"><h3>Patterns</h3>${i.patterns.map(p=>`<p>🔎 ${esc(p)}</p>`).join("")}</div>`;
+  if(i.refills.length) h+=`<div class="card"><h3>Refills soon</h3>${i.refills.map(r=>`<p>🧴 ${esc(r.name)}: ~${r.days_left} day(s), runs out ${r.run_out_on}</p>`).join("")}</div>`;
+  if(ck.length) h+=`<div class="card"><h3>Recent check-ins</h3>${ck.map(c=>`<p>${["😣","😕","😐","🙂","😄"][c.mood-1]} <span class="muted">${c.at.replace("T"," ")} ${esc(c.symptoms||"")}</span></p>`).join("")}</div>`;
+  h+=`<button class="btn sec noprint" id="rep">Doctor report</button><pre id="repout" class="hidden"></pre>`;
+  v.innerHTML=h;
+  $("#rep").onclick=async()=>{const r=await api("/report");const p=$("#repout");p.textContent=r.text;p.classList.remove("hidden");
+    if(confirm("Print this report?")) window.print()};
+}
+
+// ------------------------------------------------------------------- family
+async function familyView(){
+  const v=$("#view"); const ms=await api("/members"); const isElder=me.role==="elder";
+  let h=`<div class="card"><h2>${t("family")}</h2><p class="muted">Share profile number <b>#${me.profile_id}</b> so people can request access. ${isElder?"You decide who can see or change your information.":""}</p></div>`;
+  ms.forEach(m=>{
+    const st=m.revoked?`<span class="pill bad">Revoked</span>`:m.approved?`<span class="pill ok">Active</span>`:`<span class="pill warn">Waiting</span>`;
+    h+=`<div class="card"><div class="row"><div><h3>${esc(m.name)}</h3><div class="muted">${esc(m.role)} ${m.role!=="elder"?(m.can_edit?"· can edit":"· view only"):""}</div></div><div class="fit">${st}</div></div>`;
+    if(isElder&&m.role!=="elder"){
+      h+=`<div class="row" style="margin-top:10px">
+      ${!m.approved?`<button class="btn sm" data-id="${m.id}" data-a="approve">Approve</button>`:""}
+      ${m.approved&&!m.revoked?`<button class="btn sec sm" data-id="${m.id}" data-a="${m.can_edit?"viewonly":"canedit"}">${m.can_edit?"Make view only":"Allow editing"}</button>`:""}
+      ${!m.revoked?`<button class="btn danger sm" data-id="${m.id}" data-a="revoke">Revoke</button>`:`<button class="btn sm" data-id="${m.id}" data-a="restore">Restore</button>`}</div>`;
+    }
+    h+=`</div>`;
+  });
+  v.innerHTML=h;
+  const map={approve:{approved:true},viewonly:{can_edit:false},canedit:{can_edit:true},revoke:{revoked:true},restore:{revoked:false,approved:true}};
+  v.querySelectorAll("button[data-a]").forEach(b=>b.onclick=async()=>{try{await api("/members/"+b.dataset.id,{method:"PATCH",body:map[b.dataset.a]});familyView()}catch(e){toast(e.message)}});
+}
+
+// ----------------------------------------------------------------- activity
+async function activityView(){
+  const v=$("#view"); const a=await api("/audit");
+  v.innerHTML=`<div class="card"><h2>${t("activity")}</h2><p class="muted">Everything done on this profile, newest first.</p>`+
+    (a.map(x=>`<p><span class="muted">${x.at.replace("T"," ")}</span><br><b>${esc(x.who||"System")}</b> · ${esc(x.action.replace(/_/g," "))} ${esc(x.detail||"")}</p>`).join("")||"<p class='muted'>Nothing yet.</p>")+`</div>`;
+}
+
+boot();
+setInterval(()=>{ if(token&&me&&tab==="today") todayView(); }, 60000);
+</script>
+</body>
+</html>
