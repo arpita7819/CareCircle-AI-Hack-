@@ -114,10 +114,10 @@ It focuses on medication management, timely reminders, health tracking, and cont
 ## 📸 Application Screenshots
 
 ### 1. Login & Registration
-![Login and Registration](screenshots/login.png)
+<a href="https://github.com/arpita7819/CareCircle-AI-Hack-/blob/main/Screenshots/login.png">Login</a>
 
 ### 2. Main Dashboard
-![CareCircle Dashboard](screenshots/dashboard.png)
+<a href="
 
 ### 3. Medication Management
 ![Medication Management](screenshots/medication.png)
